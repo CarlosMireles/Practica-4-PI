@@ -46,7 +46,9 @@ boolean alarma2Activa = false;
 boolean formatoAM_PM = false;
 
 int modo=1;										// 0: Vizualización 1: Configuración
-int opcion=0;
+int opcion=0;									// opciones del menú de configuración
+int contador=0;								// Cuenta cuantas iteraciones se pasa en el menú de configuración sin realizar nada 
+
 
 // Setup
 void setup() {
@@ -366,7 +368,7 @@ boolean cambiarFormato(){
 }
 
 
-void obtenerOpcion(){
+void obtenerOpcionConsola(){
 		if (Serial.available() >0 ) {
 				byte lectura = Serial.read() - 0x30;
 				opcion = lectura;
@@ -376,7 +378,6 @@ void obtenerOpcion(){
 
 
 void loop() {
-		
 		// Modo visualizacion
 		if (modo == 0){
 
@@ -384,16 +385,24 @@ void loop() {
 
 		// Modo Configuracion
 		if (modo == 1){
-				obtenerOpcion();
+				obtenerOpcionConsola();
 
 				switch (opcion){
+						case 0:
+								if (contador==5) {
+									modo=0;
+									Serial.println("Modo actual: Modo Visualización");
+								}
+								contador+=1;		
 						case 1:
 								break;
 						case 2:
 								break;
 						case 3:
+								Serial.println("Se ha cambiado el formato de la hora: " + formatoDeHora());
 								formatoAM_PM  = cambiarFormato();
 								opcion=0;
+								contador=0;
 								break;
 						case 4:
 								break;
@@ -404,14 +413,33 @@ void loop() {
 						case 7:		
 								break;				
 				}
-				Serial.println("formatoAM_PM = "  +  String(formatoAM_PM));
-				delay(300);
+				delay(300);				
 		}
 }
 
 
 
-void teclado(int digit){
+void teclado(){
+		for (int j=0;i<3;i++){
+				    if (digitalRead(42) == 0){
+							while (digitalRead(42) == 0){}    
+							NumTec += teclado_map[0][j];
+					}
+					if (digitalRead(43) == 0){
+							while (digitalRead(43) == 0){}    
+							NumTec += teclado_map[1][j];
+					}
+					if (digitalRead(44) == 0){
+							while (digitalRead(44) == 0){}    
+							NumTec += teclado_map[2][j];
+					}
+					if (digitalRead(45) == 0){
+							while (digitalRead(45) == 0){}    
+							NumTec += teclado_map[3][j];
+					}
+		}
+		
+
     if (digitalRead(42) == 0){
         while (digitalRead(42) == 0){}    
         NumTec += teclado_map[0][digit];
@@ -436,3 +464,4 @@ void teclado(int digit){
             NumTec = "";
     }
 }
+  	
