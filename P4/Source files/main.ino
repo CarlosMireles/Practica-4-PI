@@ -83,16 +83,29 @@ void setup() {
 		delay(150);									
 		muestra_menu();
 		
-		cli();			
-		// ISR 1 --> Modo 15 
+		cli();
+
+									/* ISR 1*/
+		// Modo 15 
 		TCCR1A = (0 << WGM11) | (1 << WGM10); 
 		TCCR1B = (1 << WGM13) | (1 << WGM12);
 		// Configurar prescaler de 1024 
-		TCCR1B = (1 << CS12) | (0 << CS11) | (1 << CS10);
+		TCCR1B  = (1 << CS12) | (0 << CS11) | (1 << CS10);
 		// TOP 
 		OCR1A = 7812;
 		// Habilitar interrupción de desbordamiento
-		TIMSK1 = (1 << TOIE1); 
+		TIMSK1 = (1 << TOIE1);
+
+									/* ISR 3*/
+		// Modo 15 
+		TCCR3A = (0 << WGM11) | (1 << WGM10); 
+		TCCR3B = (1 << WGM13) | (1 << WGM12);
+		// Configurar prescaler de 1024 
+		TCCR3B  = (1 << CS12) | (0 << CS11) | (1 << CS10);
+		// TOP 
+		OCR3A = NOSE;
+
+ 
 		sei();
 
 
@@ -196,15 +209,18 @@ void muestra_menu(){
 		Serial.print("3. Cambiar formato: ");
 		Serial.println(formatoDeHora());
 		Serial.println("---------------------------------------------------------------");
-		Serial.println("     - Configurar alarma 1");
+		Serial.println("    4 - Configurar alarma 1");
 		Serial.println("");
-		Serial.println("   4. Alarma 1 ON");
-		Serial.println("   5. Alarma 1 OFF");
+		Serial.println("   5. Alarma 1 ON");
+		Serial.println("   6. Alarma 1 OFF");
 		Serial.println("---------------------------------------------------------------");
-		Serial.println("     - Configurar alarma 2");
+		Serial.println("    7 - Configurar alarma 2");
 		Serial.println("");
-		Serial.println("   6. Alarma 2 ON");
-		Serial.println("   7. Alarma 2 OFF");
+		Serial.println("   8. Alarma 2 ON");
+		Serial.println("   9. Alarma 2 OFF");
+		Serial.println("---------------------------------------------------------------");
+		Serial.println("10. Apagar sonido de las alarmas");
+		Serial.println("11. Mostrar Opciones del menú");
 		Serial.println("---------------------------------------------------------------");
 }
 
@@ -354,73 +370,8 @@ ISR (TIMER1_OVF_vect){
 } 
 
 
-ISR (TIMER3_COMPA_vect) {
-		
-}         
-
- 
-
-boolean cambiarFormato(){
-		if (formatoAM_PM) {
-				return false;
-		}
-		return true;
-}
-
-
-void obtenerOpcionConsola(){
-		if (Serial.available() >0 ) {
-				byte lectura = Serial.read() - 0x30;
-				opcion = lectura;
-		}
-		Serial.println("Se ha seleccionado: " + String(opcion));
-}
-
-
-void loop() {
-		// Modo visualizacion
-		if (modo == 0){
-
-		}
-
-		// Modo Configuracion
-		if (modo == 1){
-				obtenerOpcionConsola();
-
-				switch (opcion){
-						case 0:
-								if (contador==5) {
-									modo=0;
-									Serial.println("Modo actual: Modo Visualización");
-								}
-								contador+=1;		
-						case 1:
-								break;
-						case 2:
-								break;
-						case 3:
-								Serial.println("Se ha cambiado el formato de la hora: " + formatoDeHora());
-								formatoAM_PM  = cambiarFormato();
-								opcion=0;
-								contador=0;
-								break;
-						case 4:
-								break;
-						case 5:
-								break;
-						case 6:
-								break;
-						case 7:		
-								break;				
-				}
-				delay(300);				
-		}
-}
-
-
-
 void teclado(){
-		for (int j=0;i<3;i++){
+		for (int j=0;j<3;j++){
 				    if (digitalRead(42) == 0){
 							while (digitalRead(42) == 0){}    
 							NumTec += teclado_map[0][j];
@@ -436,32 +387,114 @@ void teclado(){
 					if (digitalRead(45) == 0){
 							while (digitalRead(45) == 0){}    
 							NumTec += teclado_map[3][j];
+							if (j==2) {
+										numero = NumTec.toInt();
+										Serial.print("Contador = ");
+										Serial.println(numero);
+							}
 					}
 		}
-		
-
-    if (digitalRead(42) == 0){
-        while (digitalRead(42) == 0){}    
-        NumTec += teclado_map[0][digit];
-
-    }    if (digitalRead(43) == 0){
-        while (digitalRead(43) == 0){}    
-        NumTec += teclado_map[1][digit];
-
-    }    if (digitalRead(44) == 0){
-        while (digitalRead(44) == 0){}    
-        NumTec += teclado_map[2][digit];
-
-    }    if (digitalRead(45) == 0 && digit ==1){
-	   while (digitalRead(45) == 0){}
-	   NumTec += teclado_map[3][digit];
-	   
-    }	if (digitalRead(45) == 0 && digit == 2){
-            numero = NumTec.toInt();
-            while (digitalRead(45) == 0){}
-            Serial.print("Contador = ");
-	    Serial.println(numero);
-            NumTec = "";
-    }
 }
-  	
+
+
+// Rutina de servicio del timer 3. Se ejecuta cada 10 milisegundos 
+// Actualiza información de la pantalla del reloj a partir de los datos
+ISR (TIMER3_COMPA_vect) {
+		if (modo == 0){
+				// Comprobar numtec a ver si aparece *# (modo configuracion)
+		}	
+		if (modo == 1){
+				// Analizar el teclado para ver que opciones se estan poniendo 
+				// Comprobar numtec a ver si aparece #* (modo visualizacion)
+		}
+}         
+
+ 
+
+boolean cambiarFormato(){
+		if (formatoAM_PM) {
+				return false;
+		}
+		return true;
+}
+
+
+void obtenerOpcionConsola(){
+		if (Serial.available() >0 ) {
+				int lectura = Serial.read() - 0x30;
+				opcion = lectura;
+		}
+		Serial.println("Se ha seleccionado: " + String(opcion));
+}
+
+
+void loop() {
+		// Modo visualizacion
+		if (modo == 0){
+
+		}
+
+		// Modo Configuracion
+		if (modo == 1){
+				obtenerOpcionConsola();				
+				switch (opcion){
+						case 0:
+								if (contador==4) {
+									modo=0;
+									Serial.println("Modo actual --> Modo Visualización");
+									break;
+								}
+								contador+=1;		
+								break;
+						case 1:
+								opcion=0;
+								contador=0;
+								break;
+						case 2:
+								opcion=0;
+								contador=0;
+								break;
+						case 3:
+								Serial.println("Se ha cambiado el formato de la hora: " + formatoDeHora());
+								formatoAM_PM  = cambiarFormato();
+								opcion=0;
+								contador=0;
+								break;
+						case 4:
+								opcion=0;
+								contador=0;
+								break;
+						case 5:
+								opcion=0;
+								contador=0;
+								break;
+						case 6:
+								opcion=0;
+								contador=0;
+								break;
+						case 7:		
+								opcion=0;
+								contador=0;
+								break;	
+						case 8:		
+								opcion=0;
+								contador=0;
+								break;	
+						case 9:		
+								opcion=0;
+								contador=0;
+								break;				
+						case 10:		
+								opcion=0;
+								contador=0;
+								break;				
+						case 11:
+								muestra_menu();
+								opcion=0;
+								contador=0;
+								break;				
+				}
+				delay(400);
+		}
+}
+		
