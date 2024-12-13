@@ -61,6 +61,6 @@ Este proyecto consiste en el diseño e implementación de un reloj despertador u
 
 ---
 
-## Conclusión
-Este proyecto integra múltiples componentes hardware y software para crear un reloj despertador funcional. Los conocimientos adquiridos abarcan la programación de microcontroladores, gestión de interrupciones, diseño modular y depuración de sistemas integrados.
+## Autor
+Carlos Mireles Rodríguez
 
